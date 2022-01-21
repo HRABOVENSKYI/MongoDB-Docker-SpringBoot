@@ -31,23 +31,33 @@ public class SpringMongoApplication {
             Student student = new Student("Teodor", "Gr", email, Gender.MALE, address,
                     List.of("it", "philosophy"), BigDecimal.TEN, LocalDateTime.now());
 
-            Query query = new Query();
-            query.addCriteria(Criteria.where("email").is(email));
-            List<Student> students = mongoTemplate.find(query, Student.class);
-            System.out.println(students);
+//            usingMongoTemplateAndQuery(studentDao, mongoTemplate, email, student);
 
-            if (students.size() > 1) {
-                throw new IllegalStateException("Found many students with email " + email);
-            }
-
-            if (students.isEmpty()) {
+            studentDao.findStudentByEmail(email).ifPresentOrElse(s -> {
+                System.out.println(s + " already exists");
+            }, () -> {
                 System.out.println("Inserting student " + student);
                 studentDao.insert(student);
-            } else {
-                System.out.println(student + " already exists");
-            }
-
+            });
         };
+    }
+
+    private void usingMongoTemplateAndQuery(StudentDao studentDao, MongoTemplate mongoTemplate, String email, Student student) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("email").is(email));
+        List<Student> students = mongoTemplate.find(query, Student.class);
+        System.out.println(students);
+
+        if (students.size() > 1) {
+            throw new IllegalStateException("Found many students with email " + email);
+        }
+
+        if (students.isEmpty()) {
+            System.out.println("Inserting student " + student);
+            studentDao.insert(student);
+        } else {
+            System.out.println(student + " already exists");
+        }
     }
 
 }
